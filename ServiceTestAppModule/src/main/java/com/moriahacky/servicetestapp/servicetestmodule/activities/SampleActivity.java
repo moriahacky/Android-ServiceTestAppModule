@@ -3,6 +3,7 @@ package com.moriahacky.servicetestapp.servicetestmodule.activities;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.moriahacky.servicetestapp.servicetestmodule.TestSingleRequestIntentService;
 import com.moriahacky.servicetestapp.servicetestmodule.TestService;
 import com.moriahacky.servicetestapp.servicetestmodule.R;
 import com.moriahacky.servicetestapp.servicetestmodule.TestIntentService;
@@ -55,7 +56,8 @@ public class SampleActivity extends BaseActivity {
 
     @OnClick(R.id.start_queued_intent_service_button)
     public void sendStartQueuedIntentServiceRequest() {
-        Intent i = new Intent(this, TestIntentService.class);
+//        Intent i = new Intent(this, TestIntentService.class);
+        Intent i = new Intent(this, TestSingleRequestIntentService.class);
         Bundle extras = new Bundle();
         extras.putInt("request_no",  mRequestNumber++);
         extras.putBoolean("isQueued", true);

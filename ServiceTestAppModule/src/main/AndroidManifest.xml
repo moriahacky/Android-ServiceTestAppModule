@@ -17,6 +17,7 @@
 
         <service android:name=".TestService" />
         <service android:name=".TestIntentService" />
+        <service android:name=".TestSingleRequestIntentService" />
 
     </application>
 

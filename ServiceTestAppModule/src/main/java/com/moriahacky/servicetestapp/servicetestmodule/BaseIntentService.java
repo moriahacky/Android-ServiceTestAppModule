@@ -9,7 +9,7 @@ import android.os.Looper;
 import android.os.Message;
 
 /**
- * This code was taken straight up from Android's IntentService.
+ * This code was taken straight up from Android's {@link android.app.IntentService}.
  *
  * Adding the ability to clear the message queue
  * the queue.
@@ -17,36 +17,35 @@ import android.os.Message;
 public abstract class BaseIntentService
     extends Service {
 
-    private volatile Looper mServiceLooper;
-    private volatile ServiceHandler mServiceHandler;
-    private String mName;
-    private static final int MSG_WHAT = 0; // what is not used in the source so it should be safe to use
-    private boolean mRedelivery;
-
-    private final class ServiceHandler
-        extends Handler {
-
-        public ServiceHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            onHandleIntent((Intent) msg.obj);
-            stopSelf(msg.arg1);
-        }
-    }
+    private static final int MSG_WHAT = 0; // "what" is not used in the source so it should be safe to use 0
+    private final String _name;
+    private volatile Looper _serviceLooper;
+    private volatile ServiceHandler _serviceHandler;
+    private boolean _redelivery;
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
      *
-     * @param name
-     *     Used to name the worker thread, important only for debugging.
+     * @param name Used to name the worker thread, important only for debugging.
      */
     public BaseIntentService(String name) {
         super();
-        mName = name;
+        _name = name;
     }
+
+    /**
+     * This method is invoked on the worker thread with a request to process.
+     * Only one Intent is processed at a time, but the processing happens on a
+     * worker thread that runs independently from other application logic.
+     * So, if this code takes a long time, it will hold up other requests to
+     * the same IntentService, but it will not hold up anything else.
+     * When all requests have been handled, the IntentService stops itself,
+     * so you should not call {@link #stopSelf}.
+     *
+     * @param intent The value passed to {@link
+     *               android.content.Context#startService(Intent)}.
+     */
+    protected abstract void onHandleIntent(Intent intent);
 
     /**
      * Sets intent redelivery preferences.  Usually called from the constructor
@@ -65,7 +64,7 @@ public abstract class BaseIntentService
      * dies along with it.
      */
     public void setIntentRedelivery(boolean enabled) {
-        mRedelivery = enabled;
+        _redelivery = enabled;
     }
 
     @Override
@@ -75,20 +74,20 @@ public abstract class BaseIntentService
         // method that would launch the service & hand off a wakelock.
 
         super.onCreate();
-        HandlerThread thread = new HandlerThread("IntentService[" + mName + "]");
+        HandlerThread thread = new HandlerThread(String.format("IntentService[%s]", _name));
         thread.start();
 
-        mServiceLooper = thread.getLooper();
-        mServiceHandler = new ServiceHandler(mServiceLooper);
+        _serviceLooper = thread.getLooper();
+        _serviceHandler = new ServiceHandler(_serviceLooper);
     }
 
     @Override
     public void onStart(Intent intent, int startId) {
-        Message msg = mServiceHandler.obtainMessage();
+        Message msg = _serviceHandler.obtainMessage();
         msg.what = MSG_WHAT;
         msg.arg1 = startId;
         msg.obj = intent;
-        mServiceHandler.sendMessage(msg);
+        _serviceHandler.sendMessage(msg);
     }
 
     /**
@@ -101,12 +100,12 @@ public abstract class BaseIntentService
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         onStart(intent, startId);
-        return mRedelivery ? START_REDELIVER_INTENT : START_NOT_STICKY;
+        return _redelivery ? START_REDELIVER_INTENT : START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        mServiceLooper.quit();
+        _serviceLooper.quit();
     }
 
     /**
@@ -125,21 +124,20 @@ public abstract class BaseIntentService
      * Helper method that removes all requests from queue
      */
     public void clearQueue() {
-        mServiceHandler.removeMessages(MSG_WHAT);
+        _serviceHandler.removeMessages(MSG_WHAT);
     }
 
-    /**
-     * This method is invoked on the worker thread with a request to process.
-     * Only one Intent is processed at a time, but the processing happens on a
-     * worker thread that runs independently from other application logic.
-     * So, if this code takes a long time, it will hold up other requests to
-     * the same IntentService, but it will not hold up anything else.
-     * When all requests have been handled, the IntentService stops itself,
-     * so you should not call {@link #stopSelf}.
-     *
-     * @param intent
-     *     The value passed to {@link
-     *     android.content.Context#startService(Intent)}.
-     */
-    protected abstract void onHandleIntent(Intent intent);
+    private final class ServiceHandler
+        extends Handler {
+
+        public ServiceHandler(Looper looper) {
+            super(looper);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            onHandleIntent((Intent) msg.obj);
+            stopSelf(msg.arg1);
+        }
+    }
 }

@@ -22,8 +22,7 @@ public class TestIntentService extends BaseIntentService {
         if (!mServiceAlreadyRunningInBg) {
             mServiceAlreadyRunningInBg = true;
         } else {
-
-            if (intent.getBooleanExtra("isQueued", false)) {
+            if (!intent.getBooleanExtra("isQueued", false)) {
                 clearQueue();
             }
         }
